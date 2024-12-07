@@ -91,6 +91,22 @@ function gradient(net::TwoLayerNet, x, t)
     return grads
 end
 
+function update_params(
+    net::TwoLayerNet,
+    grads::Dict{String, Union{Matrix{Float32}, Vector{Float32}}},
+    learning_rate::Float32,
+)
+    for (key, _) in net.params
+        net.params[key] -= learning_rate * grads[key]
+    end
+
+    net.layers["Affine1"].W = net.params["W1"]
+    net.layers["Affine1"].b = net.params["b1"]
+    net.layers["Affine2"].W = net.params["W2"]
+    net.layers["Affine2"].b = net.params["b2"]
+
+end
+
 function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix{Float32}
     one_hot = zeros(Float32, length(t), num_classes)
     for i in 1:length(t)
@@ -145,16 +161,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
         # println("Size of x_batch: ", size(x_batch))
         # println("Size of t_batch: ", size(t_batch))
 
-        net.layers["Affine1"].W = net.params["W1"]
-        net.layers["Affine1"].b = net.params["b1"]
-        net.layers["Affine2"].W = net.params["W2"]
-        net.layers["Affine2"].b = net.params["b2"]
-
         grads = gradient(net, x_batch, t_batch)
 
-        for (key, value) in net.params
-            net.params[key] -= learning_rate * grads[key]
-        end
+        update_params(net, grads, learning_rate)
 
         loss_value = loss(net, x_batch, t_batch)
 
