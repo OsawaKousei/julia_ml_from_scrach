@@ -4,7 +4,7 @@ function sigmoid(x::Matrix)
     return 1 ./ (1 .+ exp.(-x))
 end
 
-function relu(x::Matrix{Float32})::Matrix{Float32}
+function relu(x::Matrix{Float64})::Matrix{Float64}
     return max.(0, x)
 end
 
@@ -15,8 +15,8 @@ end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    matrix::Matrix{Float32} = [1.0f0 2.0f0 3.0f0; 4.0f0 5.0f0 6.0f0]
+    matrix::Matrix{Float64} = [1.0f0 2.0f0 3.0f0; 4.0f0 5.0f0 6.0f0]
     println(matrix)
-    println(relu(matrix))
-    println(softmax(matrix))
+    println(relu(matrix)) # [[1 2 3] [4 5 6]]
+    println(softmax(matrix)) # [[0.09003057 0.24472847 0.66524096] [0.09003057 0.24472847 0.66524096]]
 end

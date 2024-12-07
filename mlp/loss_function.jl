@@ -1,30 +1,37 @@
 using LinearAlgebra
 
-function mse(t::Matrix{Float32}, y::Matrix{Float32})::Float32
+function mse(y::Matrix{Float64}, t::Matrix{Float64})::Float64
     batch_size = size(t, 2)
     return sum((t .- y) .^ 2) / batch_size
 end
 
-function cross_entropy_error(y::Matrix{Float32}, t::Matrix{Float32})::Float32
-    if ndims(y) == 1
-        t = reshape(t, 1, length(t))
-        y = reshape(y, 1, length(y))
-    end
+function loss_function(y::Matrix{Float64}, t::Matrix{Float64})::Float64
+    batch_size = size(t, 1)
+    # tを正解ラベルのindexに変換
+    t = [argmax(t[i, :]) for i in 1:batch_size]
 
-    if length(t) == length(y)
-        t = vec(getindex.(argmax(t, dims = 2), 2))  # 修正箇所
-    else
-        t = vec(t)
-    end
+    # 予測値yから正解ラベルの値を取得
+    y = [y[i, t[i]] for i in 1:batch_size]
 
+    t = Float64.(t)
+
+    return -sum(log.(y)) / batch_size
+end
+
+function cross_entropy_error(y::Vector{Float64}, t::Vector{Float64})::Float64
+    delta = 1e-7
+    return -sum(t .* log.(y .+ delta))
+end
+
+function cross_entropy_error(y::Matrix{Float64}, t::Matrix{Float64})::Float64
+    delta = 1e-7
     batch_size = size(y, 1)
-    selected_y = [y[i, t[i]] for i in 1:batch_size]
-    return -sum(log.(selected_y .+ 1e-7)) / batch_size
+    return -sum(t .* log.(y .+ delta)) / batch_size
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    t = [0.0f0 0.0f0 1.0f0 0.0f0 0.0f0; 0.0f0 0.0f0 0.0f0 0.0f0 1.0f0]
-    y = [0.1f0 0.0f0 0.6f0 0.0f0 0.0f0; 0.1f0 0.05f0 0.0f0 0.0f0 0.05f0]
+    t = [0.0 0.0 1.0 0.0 0.0; 0.0 0.0 0.0 0.0 1.0]
+    y = [0.1 0.0 0.6 0.0 0.0; 0.1 0.05 0.0 0.0 0.05]
     # println(mse(t, y))
-    println(cross_entropy_error(y, t))
+    println(loss_function(y, t)) # 1.7532778653276644
 end
