@@ -1,6 +1,7 @@
 // .jlのデフォルトフォーマッタを指定し、保存時に自動フゕォーマットを有効にする
 {
   "editor.formatOnSave": true,
+  "julia.lint.call": false,
   "[julia]": {
     "editor.defaultFormatter": "julialang.language-julia"
   }
