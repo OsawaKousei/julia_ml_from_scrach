@@ -5,6 +5,7 @@ using DataStructures
 include("activation_function.jl")
 include("loss_function.jl")
 include("layer.jl")
+include("gradient.jl")
 
 mutable struct TwoLayerNet
     params::Dict{String, Union{Matrix{Float32}, Vector{Float32}}}
@@ -51,11 +52,20 @@ function loss(net::TwoLayerNet, x::Matrix{Float32}, t::Matrix{Float32})::Float32
     return forward(net.last_layer, y, t)
 end
 
-function accuracy(net::TwoLayerNet, x::Matrix{Float32}, t::Matrix{Float32})
+function accuracy(
+    net::TwoLayerNet,
+    x::Matrix{Float32},
+    t::Matrix{Float32},
+)::Float32
     y = predict(net, x)
-    y = argmax(y, dims = 1)
-    t = argmax(t, dims = 1)
-    return sum(y .== t) / size(x, 2)
+    y = vec(argmax(y, dims = 2))
+
+    if ndims(t) != 1
+        t = vec(argmax(t, dims = 2))
+    end
+
+    accuracy = sum(y .== t) / Float32(length(y))
+    return accuracy
 end
 
 function gradient(net::TwoLayerNet, x, t)
@@ -91,7 +101,7 @@ function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix{Float32}
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    const iters::Int = 1000
+    const iters::Int = 10000
     const batch_size::Int = 100
     const learning_rate::Float32 = 0.10f0
 
@@ -114,8 +124,15 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     train_size = size(train_x, 2)
     loss_list = []
+    train_acc_list = []
+    test_acc_list = []
+
+    iter_per_epoch = round(Int, train_size / batch_size)
+    println("Iter per epoch: ", iter_per_epoch)
 
     net = TwoLayerNet(784, 50, 10)
+
+    test_t = to_one_hot(test_t, 10)
 
     for i in 1:iters
         batch_mask = rand(1:train_size, batch_size)
@@ -128,6 +145,11 @@ if abspath(PROGRAM_FILE) == @__FILE__
         # println("Size of x_batch: ", size(x_batch))
         # println("Size of t_batch: ", size(t_batch))
 
+        net.layers["Affine1"].W = net.params["W1"]
+        net.layers["Affine1"].b = net.params["b1"]
+        net.layers["Affine2"].W = net.params["W2"]
+        net.layers["Affine2"].b = net.params["b2"]
+
         grads = gradient(net, x_batch, t_batch)
 
         for (key, value) in net.params
@@ -135,9 +157,17 @@ if abspath(PROGRAM_FILE) == @__FILE__
         end
 
         loss_value = loss(net, x_batch, t_batch)
-        acc = accuracy(net, x_batch, t_batch)
-        println("iter: $(i), loss: $(loss_value)")
-        println("iter: $(i), acc: $(acc)")
+
         push!(loss_list, loss_value)
+
+        if i % iter_per_epoch == 0
+            train_acc_value = accuracy(net, x_batch, t_batch)
+            push!(train_acc_list, train_acc_value)
+            test_acc_value = accuracy(net, test_x, test_t)
+            push!(test_acc_list, test_acc_value)
+            println("Loss: ", loss_value)
+            println("Train Accuracy: ", train_acc_value)
+            println("Test Accuracy: ", test_acc_value)
+        end
     end
 end

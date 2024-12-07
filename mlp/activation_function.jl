@@ -8,11 +8,9 @@ function relu(x::Matrix{Float32})::Matrix{Float32}
     return max.(0, x)
 end
 
-function softmax(x::Matrix{Float32})::Matrix{Float32}
-    a = maximum(x, dims = 2)
-    exp_x = exp.(x .- a)
-    sum_exp_x = sum(exp_x)
-    return exp_x ./ sum_exp_x
+function softmax(x)
+    x = x .- maximum(x, dims = ndims(x))   # オーバーフロー対策
+    return exp.(x) ./ sum(exp.(x), dims = ndims(x))
 end
 
 
