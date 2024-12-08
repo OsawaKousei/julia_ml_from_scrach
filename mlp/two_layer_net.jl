@@ -57,42 +57,6 @@ function accuracy(
     return accuracy
 end
 
-# function numerical_gradient(
-#     net::TwoLayerNet,
-#     x::Matrix{Float64},
-#     t::Matrix{Float64},
-# )::Dict{String, Union{Matrix{Float64}, Vector{Float64}}}
-
-#     grads = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
-
-#     func_W1(W1)::Float64 = loss(
-#         TwoLayerNet(W1, net.params["W2"], net.params["b1"], net.params["b2"]),
-#         x,
-#         t,
-#     )
-#     grads["W1"] = numerical_gradient(func_W1, net.params["W1"])
-#     func_b1(b1)::Float64 = loss(
-#         TwoLayerNet(net.params["W1"], net.params["W2"], b1, net.params["b2"]),
-#         x,
-#         t,
-#     )
-#     grads["b1"] = numerical_gradient(func_b1, net.params["b1"])
-#     func_W2(W2)::Float64 = loss(
-#         TwoLayerNet(net.params["W1"], W2, net.params["b1"], net.params["b2"]),
-#         x,
-#         t,
-#     )
-#     grads["W2"] = numerical_gradient(func_W2, net.params["W2"])
-#     func_b2(b2)::Float64 = loss(
-#         TwoLayerNet(net.params["W1"], net.params["W2"], net.params["b1"], b2),
-#         x,
-#         t,
-#     )
-#     grads["b2"] = numerical_gradient(func_b2, net.params["b2"])
-
-#     return grads
-# end
-
 function gradient(
     net::TwoLayerNet,
     x::Matrix{T},
@@ -194,22 +158,8 @@ if abspath(PROGRAM_FILE) == @__FILE__
         # t_batchをone-hot表現に変換
         t_batch = to_one_hot(t_batch, 10)
 
-        # println("Size of x_batch: ", size(x_batch))
-        # println("Size of t_batch: ", size(t_batch))
-
-        # バッチの最初のデータを画像に変換し、ラベルを表示
-        # img = reshape(x_batch[1, :], 28, 28)
-        # imshow(img, cmap = "gray")
-        # println("Label: ", argmax(t_batch[1, :]) - 1)
-
         # grads = numerical_gradient(net, x_batch, t_batch)
         grads = gradient(net, x_batch, t_batch)
-
-        # 勾配が正しいか確認し、数値微分と誤差が小さければOK
-        # for (key, value) in grads
-        #     println("Key: ", key)
-        #     println("Diff: ", maximum(abs.(numerical_grads[key] .- value)))
-        # end
 
         update_params(net, grads, learning_rate)
 
