@@ -1,148 +1,117 @@
 using LinearAlgebra
 using MLDatasets
 using DataStructures
+using PyPlot
 
 include("activation_function.jl")
 include("loss_function.jl")
 include("layer.jl")
 include("gradient.jl")
 
-mutable struct TwoLayerNet
-    params::Dict{String, Union{Matrix{Float64}, Vector{Float64}}}
-    layers::OrderedDict{String, Union{Affine, Relu, SoftmaxWithLoss}}
-    last_layer::SoftmaxWithLoss
+mutable struct TwoLayerNet{T <: Real}
+    layers::OrderedDict{String, Union{Affine{T}, Relu{T}}}
+    last_layer::SoftmaxWithLoss{T}
+
+    function TwoLayerNet{T}(
+        input_size::Int,
+        hidden_size::Int,
+        output_size::Int,
+        std = 0.01,
+    ) where T <: Real
+        std = convert(T, std)
+        layers = OrderedDict{String, Union{Affine{T}, Relu{T}}}()
+        layers["Affine1"] = Affine{T}(std * randn(T, input_size, hidden_size), zeros(T, hidden_size))
+        layers["Relu1"] = Relu{T}()
+        layers["Affine2"] = Affine{T}(std * randn(T, hidden_size, output_size), zeros(T, output_size))
+
+        last_layer = SoftmaxWithLoss{T}()
+
+        return new{T}(layers, last_layer)
+    end
 end
 
-function TwoLayerNet(
-    input_size::Int,
-    hidden_size::Int,
-    output_size::Int,
-    std::Float64 = 0.01,
-)::TwoLayerNet
-    net = TwoLayerNet(
-        Dict{String, Union{Matrix{Float64}, Vector{Float64}}}(),
-        OrderedDict{String, Union{Affine, Relu, SoftmaxWithLoss}}(),
-        SoftmaxWithLoss(),
-    )
-    net.params = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
-    net.params["W1"] = std * randn(Float64, input_size, hidden_size)
-    net.params["b1"] = zeros(Float64, hidden_size)
-    net.params["W2"] = std * randn(Float64, hidden_size, output_size)
-    net.params["b2"] = zeros(Float64, output_size)
-
-    net.layers = OrderedDict{String, Union{Affine, Relu, SoftmaxWithLoss}}()
-    net.layers["Affine1"] = Affine(net.params["W1"], net.params["b1"])
-    net.layers["Relu1"] = Relu()
-    net.layers["Affine2"] = Affine(net.params["W2"], net.params["b2"])
-
-    net.last_layer = SoftmaxWithLoss()
-
-    return net
-end
-
-function TwoLayerNet(
-    W1::Matrix{Float64},
-    W2::Matrix{Float64},
-    b1::Vector{Float64},
-    b2::Vector{Float64},
-)::TwoLayerNet
-    net = TwoLayerNet(
-        Dict{String, Union{Matrix{Float64}, Vector{Float64}}}(),
-        OrderedDict{String, Union{Affine, Relu, SoftmaxWithLoss}}(),
-        SoftmaxWithLoss(),
-    )
-    net.params = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
-    net.params["W1"] = W1
-    net.params["b1"] = b1
-    net.params["W2"] = W2
-    net.params["b2"] = b2
-
-    return net
-end
-
-function predict(net::TwoLayerNet, x::Matrix{Float64})::Matrix{Float64}
-    for (_, layer) in net.layers
+function predict(net::TwoLayerNet, x::Matrix{T})::Matrix{T} where T <: Real
+    for (key, layer) in net.layers
         x = forward(layer, x)
     end
     return x
 end
 
-function loss(net::TwoLayerNet, x::Matrix{Float64}, t::Matrix{Float64})::Float64
+function loss(net::TwoLayerNet, x::Matrix{T}, t::Matrix{T})::T where T <: Real
     y = predict(net, x)
     return forward(net.last_layer, y, t)
 end
 
 function accuracy(
     net::TwoLayerNet,
-    x::Matrix{Float64},
-    t::Matrix{Float64},
-)::Float64
+    x::Matrix{T},
+    t::Matrix{T},
+)::T where T <: Real
     y = predict(net, x)
     y = vec(argmax(y, dims = 2))
 
-    if ndims(t) != 1
-        t = vec(argmax(t, dims = 2))
-    end
+    t = vec(argmax(t, dims = 2))
 
-    accuracy = sum(y .== t) / Float64(length(y))
+
+    accuracy = sum(y .== t) / length(y)
     return accuracy
 end
 
-function numerical_gradient(
-    net::TwoLayerNet,
-    x::Matrix{Float64},
-    t::Matrix{Float64},
-)::Dict{String, Union{Matrix{Float64}, Vector{Float64}}}
+# function numerical_gradient(
+#     net::TwoLayerNet,
+#     x::Matrix{Float64},
+#     t::Matrix{Float64},
+# )::Dict{String, Union{Matrix{Float64}, Vector{Float64}}}
 
-    grads = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
+#     grads = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
 
-    func_W1(W1)::Float64 = loss(
-        TwoLayerNet(W1, net.params["W2"], net.params["b1"], net.params["b2"]),
-        x,
-        t,
-    )
-    grads["W1"] = numerical_gradient(func_W1, net.params["W1"])
-    func_b1(b1)::Float64 = loss(
-        TwoLayerNet(net.params["W1"], net.params["W2"], b1, net.params["b2"]),
-        x,
-        t,
-    )
-    grads["b1"] = numerical_gradient(func_b1, net.params["b1"])
-    func_W2(W2)::Float64 = loss(
-        TwoLayerNet(net.params["W1"], W2, net.params["b1"], net.params["b2"]),
-        x,
-        t,
-    )
-    grads["W2"] = numerical_gradient(func_W2, net.params["W2"])
-    func_b2(b2)::Float64 = loss(
-        TwoLayerNet(net.params["W1"], net.params["W2"], net.params["b1"], b2),
-        x,
-        t,
-    )
-    grads["b2"] = numerical_gradient(func_b2, net.params["b2"])
+#     func_W1(W1)::Float64 = loss(
+#         TwoLayerNet(W1, net.params["W2"], net.params["b1"], net.params["b2"]),
+#         x,
+#         t,
+#     )
+#     grads["W1"] = numerical_gradient(func_W1, net.params["W1"])
+#     func_b1(b1)::Float64 = loss(
+#         TwoLayerNet(net.params["W1"], net.params["W2"], b1, net.params["b2"]),
+#         x,
+#         t,
+#     )
+#     grads["b1"] = numerical_gradient(func_b1, net.params["b1"])
+#     func_W2(W2)::Float64 = loss(
+#         TwoLayerNet(net.params["W1"], W2, net.params["b1"], net.params["b2"]),
+#         x,
+#         t,
+#     )
+#     grads["W2"] = numerical_gradient(func_W2, net.params["W2"])
+#     func_b2(b2)::Float64 = loss(
+#         TwoLayerNet(net.params["W1"], net.params["W2"], net.params["b1"], b2),
+#         x,
+#         t,
+#     )
+#     grads["b2"] = numerical_gradient(func_b2, net.params["b2"])
 
-    return grads
-end
+#     return grads
+# end
 
 function gradient(
     net::TwoLayerNet,
-    x::Matrix{Float64},
-    t::Matrix{Float64},
-)::Dict{String, Union{Matrix{Float64}, Vector{Float64}}}
+    x::Matrix{T},
+    t::Matrix{T},
+)::Dict{String, Union{Matrix{T}, Vector{T}}} where T <: Real
     # forward
     loss(net, x, t)
 
     # backward
-    d_out = 1
+    d_out = convert(T, 1.0) # lossはlast_layerに格納されているが、形式的に1を代入
     d_out = backward(net.last_layer, d_out)
 
-    layers = collect(values(net.layers))
+    layers = collect(net.layers)
     layers = reverse(layers)
-    for layer in layers
+    for (key, layer) in layers
         d_out = backward(layer, d_out)
     end
 
-    grads = Dict{String, Union{Matrix{Float64}, Vector{Float64}}}()
+    grads = Dict{String, Union{Matrix{T}, Vector{T}}}()
     grads["W1"] = net.layers["Affine1"].dW
     grads["b1"] = net.layers["Affine1"].db
     grads["W2"] = net.layers["Affine2"].dW
@@ -153,21 +122,16 @@ end
 
 function update_params(
     net::TwoLayerNet,
-    grads::Dict{String, Union{Matrix{Float64}, Vector{Float64}}},
+    grads::Dict{String, Union{Matrix{T}, Vector{T}}},
     learning_rate::Float64,
-)
-    for (key, _) in net.params
-        net.params[key] -= learning_rate * grads[key]
-    end
-
-    net.layers["Affine1"].W = net.params["W1"]
-    net.layers["Affine1"].b = net.params["b1"]
-    net.layers["Affine2"].W = net.params["W2"]
-    net.layers["Affine2"].b = net.params["b2"]
-
+) where T <: Real
+    net.layers["Affine1"].W -= learning_rate * grads["W1"]
+    net.layers["Affine1"].b -= learning_rate * grads["b1"]
+    net.layers["Affine2"].W -= learning_rate * grads["W2"]
+    net.layers["Affine2"].b -= learning_rate * grads["b2"]
 end
 
-function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix{Float64}
+function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix
     one_hot = zeros(Float64, length(t), num_classes)
     for i in 1:length(t)
         one_hot[i, t[i] + 1] = 1
@@ -177,7 +141,7 @@ function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix{Float64}
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    const iters::Int = 150
+    const iters::Int = 10000
     const batch_size::Int = 100
     const learning_rate::Float64 = 0.10
 
@@ -187,13 +151,22 @@ if abspath(PROGRAM_FILE) == @__FILE__
     train_x, train_t = Float64.(train_data.features), train_data.targets
     test_x, test_t = Float64.(test_data.features), test_data.targets
 
+    println("Size of train_x: ", size(train_x))
+    println("Size of test_x: ", size(test_x))
+
     # 3次元配列を2次元配列に変換
     train_x =
-        reshape(train_x, size(train_x, 3), size(train_x, 1) * size(train_x, 2))
-    test_x = reshape(test_x, size(test_x, 3), size(test_x, 1) * size(test_x, 2))
+        reshape(train_x, size(train_x, 1) * size(train_x, 2), size(train_x, 3))
+    test_x = reshape(test_x, size(test_x, 1) * size(test_x, 2), size(test_x, 3))
+
+    # 1列目と2列目を入れ替え
+    train_x = Matrix(train_x')
+    test_x = Matrix(test_x')
 
     println("Size of train_x: ", size(train_x))
     println("Size of test_x: ", size(test_x))
+    println("type of train_x: ", typeof(train_x))
+    println("type of test_x: ", typeof(test_x))
 
     println("Size of train_t: ", size(train_t))
     println("Size of test_t: ", size(test_t))
@@ -207,7 +180,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     iter_per_epoch = round(Int, train_size / batch_size)
     println("Iter per epoch: ", iter_per_epoch)
 
-    net = TwoLayerNet(784, 50, 10)
+    net = TwoLayerNet{Float64}(784, 50, 10, 0.01f0)
 
     test_t = to_one_hot(test_t, 10)
     println("Size of test_x: ", size(test_x))
@@ -224,8 +197,13 @@ if abspath(PROGRAM_FILE) == @__FILE__
         # println("Size of x_batch: ", size(x_batch))
         # println("Size of t_batch: ", size(t_batch))
 
-        grads = numerical_gradient(net, x_batch, t_batch)
-        # grads = gradient(net, x_batch, t_batch)
+        # バッチの最初のデータを画像に変換し、ラベルを表示
+        # img = reshape(x_batch[1, :], 28, 28)
+        # imshow(img, cmap = "gray")
+        # println("Label: ", argmax(t_batch[1, :]) - 1)
+
+        # grads = numerical_gradient(net, x_batch, t_batch)
+        grads = gradient(net, x_batch, t_batch)
 
         # 勾配が正しいか確認し、数値微分と誤差が小さければOK
         # for (key, value) in grads
@@ -239,7 +217,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         push!(loss_list, loss_value)
 
-        if i % iter_per_epoch * 0 == 0
+        if i % iter_per_epoch == 0
             train_acc_value = accuracy(net, x_batch, t_batch)
             push!(train_acc_list, train_acc_value)
 
