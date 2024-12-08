@@ -6,7 +6,6 @@ using PyPlot
 include("activation_function.jl")
 include("loss_function.jl")
 include("layer.jl")
-include("gradient.jl")
 
 mutable struct TwoLayerNet{T <: Real}
     layers::OrderedDict{String, Union{Affine{T}, Relu{T}}}
