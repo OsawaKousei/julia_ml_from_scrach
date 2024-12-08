@@ -101,25 +101,25 @@ function numerical_gradient(
         x,
         t,
     )
-    grads["W1"] = numerical_gradient_auto_diff(func_W1, net.params["W1"])
+    grads["W1"] = numerical_gradient(func_W1, net.params["W1"])
     func_b1(b1)::Float64 = loss(
         TwoLayerNet(net.params["W1"], net.params["W2"], b1, net.params["b2"]),
         x,
         t,
     )
-    grads["b1"] = numerical_gradient_auto_diff(func_b1, net.params["b1"])
+    grads["b1"] = numerical_gradient(func_b1, net.params["b1"])
     func_W2(W2)::Float64 = loss(
         TwoLayerNet(net.params["W1"], W2, net.params["b1"], net.params["b2"]),
         x,
         t,
     )
-    grads["W2"] = numerical_gradient_auto_diff(func_W2, net.params["W2"])
+    grads["W2"] = numerical_gradient(func_W2, net.params["W2"])
     func_b2(b2)::Float64 = loss(
         TwoLayerNet(net.params["W1"], net.params["W2"], net.params["b1"], b2),
         x,
         t,
     )
-    grads["b2"] = numerical_gradient_auto_diff(func_b2, net.params["b2"])
+    grads["b2"] = numerical_gradient(func_b2, net.params["b2"])
 
     return grads
 end
@@ -177,7 +177,7 @@ function to_one_hot(t::Vector{Int}, num_classes::Int)::Matrix{Float64}
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    const iters::Int = 300
+    const iters::Int = 150
     const batch_size::Int = 100
     const learning_rate::Float64 = 0.10
 
@@ -226,6 +226,12 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
         grads = numerical_gradient(net, x_batch, t_batch)
         # grads = gradient(net, x_batch, t_batch)
+
+        # 勾配が正しいか確認し、数値微分と誤差が小さければOK
+        # for (key, value) in grads
+        #     println("Key: ", key)
+        #     println("Diff: ", maximum(abs.(numerical_grads[key] .- value)))
+        # end
 
         update_params(net, grads, learning_rate)
 
