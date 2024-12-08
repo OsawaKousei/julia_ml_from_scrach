@@ -157,6 +157,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         # t_batchをone-hot表現に変換
         t_batch = to_one_hot(t_batch, 10)
 
+
         # grads = numerical_gradient(net, x_batch, t_batch)
         grads = gradient(net, x_batch, t_batch)
 
