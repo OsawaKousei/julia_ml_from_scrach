@@ -16,7 +16,6 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     matrix::Matrix{Float32} = [1.0f0 2.0f0 3.0f0; 4.0f0 5.0f0 6.0f0]
-    println(matrix)
     println(sigmoid(matrix)) # [[0.7310586 0.880797 0.95257413] [0.98201376 0.9933072 0.9975274]]
     println(relu(matrix)) # [[1 2 3] [4 5 6]]
     println(softmax(matrix)) # [[0.09003057 0.24472847 0.66524096] [0.09003057 0.24472847 0.66524096]]

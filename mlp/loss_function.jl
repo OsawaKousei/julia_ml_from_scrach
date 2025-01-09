@@ -24,7 +24,7 @@ end
 if abspath(PROGRAM_FILE) == @__FILE__
     t = [0.0 0.0 1.0 0.0 0.0; 0.0 0.0 0.0 0.0 1.0]
     y = [0.1 0.0 0.6 0.0 0.0; 0.1 0.05 0.0 0.0 0.05]
-    println(mse(t, y))
-    println(cross_entropy_error(y, t)) # 0.510825457099338
+    println(mse(t, y)) # 0.5425
+    println(cross_entropy_error(y, t)) # 3.5065557306553288
     println(loss_function(y, t)) # 1.7532778653276644
 end

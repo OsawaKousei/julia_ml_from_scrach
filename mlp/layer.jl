@@ -83,22 +83,22 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     mat1 = [-1.0 0.0 1.0; 2.0 3.0 4.0]
-    # mat2 = [1.0 2.0; 3.0 4.0]
+    mat2 = [1.0 2.0; 3.0 4.0]
 
     relu_layer = Relu{Float32}()
     println(forward(relu_layer, mat1)) # [[0.0 0.0 1.0] [2.0 3.0 4.0]]
     println(backward(relu_layer, mat1)) # [[0.0 0.0 1.0] [2.0 3.0 4.0]]
 
-    # W = [1.0 2.0; 3.0 4.0; 5.0 6.0]
-    # b = [1.0, 2.0]
+    W = [1.0 2.0; 3.0 4.0; 5.0 6.0]
+    b = [1.0, 2.0]
 
-    # affine_layer = Affine{Float64}(W, b)
-    # println(forward(affine_layer, mat1)) # [[5.0 6.0] [32.0 42.0]
-    # println(backward(affine_layer, mat2)) # [[5.0 11.0 17.0] [11.0 25.0 39.0]]
+    affine_layer = Affine{Float64}(W, b)
+    println(forward(affine_layer, mat1)) # [[5.0 6.0] [32.0 42.0]
+    println(backward(affine_layer, mat2)) # [[5.0 11.0 17.0] [11.0 25.0 39.0]]
 
-    # y = [0.0 0.75 0.5; 0.0 0.25 0.5]
-    # t = [0.0 1.0 0.0; 0.0 0.0 1.0]
-    # softmax_with_loss_layer = SoftmaxWithLoss{Float64}()
-    # println(forward(softmax_with_loss_layer, y, t)) # 0.8114486724778056
-    # println(backward(softmax_with_loss_layer)) # [0.2098318260159648 -0.5557860208383346 0.3459541948223697]
+    y = [0.0 0.75 0.5; 0.0 0.25 0.5]
+    t = [0.0 1.0 0.0; 0.0 0.0 1.0]
+    softmax_with_loss_layer = SoftmaxWithLoss{Float64}()
+    println(forward(softmax_with_loss_layer, y, t)) # 0.8403932591751839
+    println(backward(softmax_with_loss_layer, 1.0)) # [0.1049159130079824 -0.2778930104191673 0.17297709741118486; 0.12713760629523282 0.16324791789991835 -0.2903855241951512]
 end
