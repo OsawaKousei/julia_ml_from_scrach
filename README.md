@@ -4,4 +4,4 @@ MLP implementation on julia running on CPU.
 96.96% accuracy on test data for training and evaluation with MNIST dataset.
 
 
-Upon request, CNN and other architectures may be implemented in the future.
+CNN and other architectures may be implemented in the future.
